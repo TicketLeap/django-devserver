@@ -144,8 +144,19 @@ class SQLSummaryModule(DevServerModule):
         ]
         num_queries = len(queries)
         if num_queries:
-            unique = set([s['sql'] for s in queries])
-            self.logger.info('%(calls)s queries with %(dupes)s duplicates' % dict(
-                calls=num_queries,
-                dupes=num_queries - len(unique),
-            ), duration=sum(float(c.get('time', 0)) for c in queries) * 1000)
+            import re
+            rx = '[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}'
+            cleaned = [re.sub(rx, '__UUID__', s['sql']) for s in queries]
+            unique = set(cleaned)
+            dupes = num_queries - len(unique)
+
+            duration=sum(float(c.get('time', 0)) for c in queries) * 1000
+            message = '%(calls)s queries with %(dupes)s duplicates' % dict(calls=num_queries, dupes=dupes)
+
+            if dupes > 1 or duration > 1000:
+                self.logger.info(self.logger.style.NOTICE('*'*50))
+                self.logger.info(self.logger.style.NOTICE(message), duration=duration)
+                self.logger.info(self.logger.style.NOTICE('*'*50))
+            else:
+                self.logger.info(message, duration=sum(float(c.get('time', 0)) for c in queries) * 1000)
+
