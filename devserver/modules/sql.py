@@ -120,6 +120,8 @@ class SQLRealTimeModule(DevServerModule):
     logger_name = 'sql'
 
     def process_init(self, request):
+        self.logger.info(' ')
+        self.logger.info('~'*50)
         if not issubclass(util.CursorDebugWrapper, DatabaseStatTracker):
             self.old_cursor = util.CursorDebugWrapper
             util.CursorDebugWrapper = DatabaseStatTracker
@@ -128,8 +130,6 @@ class SQLRealTimeModule(DevServerModule):
     def process_complete(self, request):
         if issubclass(util.CursorDebugWrapper, DatabaseStatTracker):
             util.CursorDebugWrapper = self.old_cursor
-        self.logger.info('~'*50)
-        self.logger.info(' ')
 
 
 class SQLSummaryModule(DevServerModule):
