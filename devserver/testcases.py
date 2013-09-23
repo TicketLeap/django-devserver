@@ -5,9 +5,15 @@ import threading
 from django.conf import settings
 from django.core.handlers.wsgi import WSGIHandler
 from django.core.management import call_command
-from django.core.servers.basehttp import WSGIServer, WSGIServerException
+from django.core.servers.basehttp import WSGIServer
 
 from devserver.utils.http import SlimWSGIRequestHandler
+
+try:
+    from django.core.servers.basehttp import (WSGIServerException as
+                                              wsgi_server_exc_cls)
+except ImportError:  # Django 1.6
+    wsgi_server_exc_cls = socket.error
 
 
 class StoppableWSGIServer(WSGIServer):
@@ -59,7 +65,7 @@ class ThreadedTestServerThread(threading.Thread):
             httpd = new(server_address, SlimWSGIRequestHandler)
             httpd.set_app(handler)
             self.started.set()
-        except WSGIServerException, e:
+        except wsgi_server_exc_cls, e:
             self.error = e
             self.started.set()
             return
