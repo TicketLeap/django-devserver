@@ -49,7 +49,12 @@ try:
     debug_toolbar = True
 except ImportError:
     debug_toolbar = False
-    DatabaseStatTracker = util.CursorDebugWrapper
+    import django
+    version = float('.'.join([str(x) for x in django.VERSION[:2]]))
+    if version >= 1.6:
+        DatabaseStatTracker = util.CursorWrapper
+    else:
+        DatabaseStatTracker = util.CursorDebugWrapper
 
 
 class DatabaseStatTracker(DatabaseStatTracker):
@@ -81,7 +86,7 @@ class DatabaseStatTracker(DatabaseStatTracker):
 
             if self.logger and (not settings.DEVSERVER_SQL_MIN_DURATION
                     or duration > settings.DEVSERVER_SQL_MIN_DURATION):
-                if self.cursor.rowcount >= 0:
+                if self.cursor.rowcount >= 0 and message is not None:
                     self.logger.debug('Found %s matching rows', self.cursor.rowcount, duration=duration)
 
             if not (debug_toolbar or django_settings.DEBUG):
